@@ -1,23 +1,46 @@
 import { createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import React from 'react';
+import React, { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import app from '../firebase/firebase.init';
 
 const auth = getAuth(app);
 const RegisterReactBootstrap = () => {
+
+    const [passwordError, setPasswordError] = useState('');
+    const [succes, setSucces] = useState(false);
+
     const handleOnSubmit = event => {
         event.preventDefault()
-        const email = event.target.formBasicEmail.value;
-        const password = event.target.formBasicPassword.value;
-
+        setSucces(false);
+        
+        const form = event.target;
+        const email = form.formBasicEmail.value;
+        const password = form.formBasicPassword.value;
+        console.log(email, password);
+        if(!/(?=.*[A-Z].*[A-Z])/.test(password)) {
+            setPasswordError('Please provide at least two upperdase');
+            return;
+        }
+        if(password.length < 6){
+            setPasswordError('Please should be at least 6 characters.');
+            return;
+        }
+        if(!/(?=.*[!@#$&*])/.test(password)){
+            setPasswordError('Please add at least one special character');
+            return;
+        }
+        setPasswordError('')
         createUserWithEmailAndPassword(auth, email, password)
         .then(result =>{
             const user = result.user;
             console.log(user);
+            setSucces(true);
+            form.reset();
         })
         .catch(error => {
             console.error('error', error);
+            setPasswordError(error.message);
         })
     }
     return (
@@ -34,9 +57,12 @@ const RegisterReactBootstrap = () => {
                 <Form.Label>Password</Form.Label>
                 <Form.Control type="password" placeholder="Password" required />
             </Form.Group>
-            
+            <p className='text-danger'>{passwordError}</p>
+            {
+                succes && <p className='text-success'>Create account succesfully</p>
+            }
             <Button variant="primary" type="submit">
-                Submit
+               Register
             </Button>
             </Form>
         </div>
